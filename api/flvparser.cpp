@@ -270,9 +270,29 @@ void ScriptKVDataParser::ParseScriptTagBody(int& offset, ScriptData*& scriptTagB
         break;
     case 11: // Data Date
     {
+#if PARSER_ENDIAN == PARSER_LITTLEENDIAN
+        uint64_t t = *(uint64_t*)(data + offset);
+        uint64_t value64 = t >> 56;
+        value64 |= ((t & 0xFF000000000000) >> 40);
+        value64 |= ((t & 0xFF0000000000) >> 24);
+        value64 |= ((t & 0xFF00000000) >> 8);
+        value64 |= ((t & 0xFF000000) << 8);
+        value64 |= ((t & 0xFF0000) << 24);
+        value64 |= ((t & 0xFF00) << 40);
+        value64 |= ((t & 0xFF) << 56);
+        double dataTime = *(double*)&value64;
+#else
         double dataTime = *(double*)(data + offset);
+#endif
         offset += sizeof(double);
+#if PARSER_ENDIAN == PARSER_LITTLEENDIAN
+        uint16_t t = *(uint16_t*)(data + offset);
+        uint16_t value = t >> 8;
+        value |= ((t & 0xFF) << 8);
+        int16_t timeOffset = *(int16_t*)&value;
+#else
         int16_t timeOffset = *(int16_t*)(data + offset);
+#endif
         offset += sizeof(int16_t);
         ScriptDataDate* dataDate = new ScriptDataDate;
         dataDate->_dateTime = dataTime;
@@ -295,7 +315,7 @@ void ScriptKVDataParser::ParseScriptTagBody(int& offset, ScriptData*& scriptTagB
 #else
         uint32_t stringLength = *(uint32_t*)(data + offset);
 #endif
-        offset += sizeof(uint16_t);
+        offset += sizeof(uint32_t);
         char* str = new char[stringLength + 1];
         memcpy(str, data + offset, stringLength * sizeof(char));
         offset += stringLength;
