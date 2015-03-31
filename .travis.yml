@@ -9,7 +9,6 @@ install:
 # We want to compile with g++ 4.8 when rather than the default g++
   - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
 script:
-    - cd FLVParserAPI
     - mkdir build
     - cd build
     - cmake -G "Unix Makefiles" ..
