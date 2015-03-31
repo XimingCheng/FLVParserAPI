@@ -1,7 +1,21 @@
 FLVParserAPI
 ============
 
+[![Build Status](https://api.travis-ci.org/XimingCheng/FLVParserAPI.png)](https://travis-ci.org/XimingCheng/FLVParserAPI)
+
 FLVParserAPI is a set of APIs for analysis the FLV container files.
+
+Build With CMake
+----------------
+
+```sh
+git clone https://github.com/XimingCheng/FLVParserAPI.git
+cd FLVParserAPI
+mkdir build
+cd build
+cmake -G "Unix Makefiles" ..
+make
+```
 
 Main features
 -------------

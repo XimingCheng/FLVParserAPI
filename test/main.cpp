@@ -15,7 +15,7 @@
 * along with FLVParser.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../flvparser.h"
+#include "../api/flvparser.h"
 
 using namespace flvparser;
 

@@ -1,0 +1,12 @@
+language: cpp
+compiler: gcc
+before_install:
+script:
+    - cd FLVParserAPI
+    - mkdir build
+    - cd build
+    - cmake -G "Unix Makefiles" ..
+    - make
+branches:
+  only:
+    - master
