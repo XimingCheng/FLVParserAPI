@@ -18,6 +18,7 @@
 #include "common.h"
 #include "flvparser.h"
 
+#include <string.h>
 #include <memory>
 #include <vector>
 
@@ -286,9 +287,9 @@ void ScriptKVDataParser::ParseScriptTagBody(int& offset, ScriptData*& scriptTagB
 #endif
         offset += sizeof(double);
 #if PARSER_ENDIAN == PARSER_LITTLEENDIAN
-        uint16_t t = *(uint16_t*)(data + offset);
-        uint16_t value = t >> 8;
-        value |= ((t & 0xFF) << 8);
+        uint16_t td = *(uint16_t*)(data + offset);
+        uint16_t value = td >> 8;
+        value |= ((td & 0xFF) << 8);
         int16_t timeOffset = *(int16_t*)&value;
 #else
         int16_t timeOffset = *(int16_t*)(data + offset);
