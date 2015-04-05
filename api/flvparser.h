@@ -195,11 +195,28 @@ void DoNothingOnVideoTag(FLVTag*, int, uint32_t, AVCPacket::AVCPacketHeader*, ui
 void DoNothingOnAudioTag(FLVTag*, int, uint32_t, uint8_t);
 void DoNothingOnScriptTag(FLVTag*, int, uint32_t);
 
+enum ScriptDataType
+{
+    DOUBLE = 0,
+    BOOLEAN,
+    STRING,
+    OBJECT,
+    MOVIE_CLIP, // reserved, not supported
+    NULL_DATA,
+    UNDEFINED,
+    REFERENCE,
+    ECMA_ARRAY,
+    OBJECT_END_MARKER,
+    STRICT_ARRAY,
+    DATA_DATE,
+    LONG_STRING
+};
 
 struct ScriptData
 {
     uint8_t             _type;
     void*               _data;
+    void*               _extra {nullptr};
     ScriptData*         _value;
 };
 
@@ -220,6 +237,7 @@ public:
 private:
 
     void                ParseScriptTagBody(int& offset, ScriptData*& scriptTagBody, bool bKey);
+    void                FreeData(ScriptData* data, bool bKey);
 
     ScriptData*         _scriptTagBody { nullptr };
     FLVTag*             _scriptTag;

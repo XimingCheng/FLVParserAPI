@@ -44,7 +44,55 @@ ScriptKVDataParser::~ScriptKVDataParser()
 
 void ScriptKVDataParser::Free()
 {
-    // TODO Free the parsing memory
+    // Free the parsing tree memory
+    if (_scriptTagBody)
+    {
+        FreeData(_scriptTagBody, true);
+        delete _scriptTagBody;
+        _scriptTagBody = nullptr;
+    }
+}
+
+void ScriptKVDataParser::FreeData(ScriptData* data, bool bKey)
+{
+    switch (data->_type)
+    {
+    case DOUBLE:
+    case BOOLEAN:
+    case REFERENCE:
+    case DATA_DATE:
+    case STRING:
+    case LONG_STRING:
+    {
+        delete data->_data;
+        if (bKey)
+            FreeData(data->_value, false);
+    }
+        break;
+    case MOVIE_CLIP:
+    case NULL_DATA:
+    case UNDEFINED:
+    case OBJECT_END_MARKER:
+        break;
+    case ECMA_ARRAY:
+    case STRICT_ARRAY:
+    case OBJECT:
+    {
+        int ArrayLength = *(int*)data->_extra;
+        delete data->_extra;
+        ScriptData* dataArray = (ScriptData*)data->_data;
+        for (int idx = 0; idx < ArrayLength; idx++)
+        {
+            FreeData(&dataArray[idx], true);
+        }
+        delete[] dataArray;
+        delete data;
+    }
+        break;
+    default:
+        assert(0);
+        break;
+    }
 }
 
 bool ScriptKVDataParser::Parse()
@@ -69,7 +117,7 @@ void ScriptKVDataParser::ParseScriptTagBody(int& offset, ScriptData*& scriptTagB
     offset += sizeof(uint8_t);
     switch (type)
     {
-    case 0: // double
+    case DOUBLE: // double
     {
 #if PARSER_ENDIAN == PARSER_LITTLEENDIAN
         uint64_t t = *(uint64_t*)(data + offset);
@@ -93,7 +141,7 @@ void ScriptKVDataParser::ParseScriptTagBody(int& offset, ScriptData*& scriptTagB
             ParseScriptTagBody(offset, scriptTagBody->_value, false);
     }
         break;
-    case 1: // boolean
+    case BOOLEAN: // boolean
     {
         uint8_t value = *(uint8_t*)(data + offset);
         bool v = (value != 0);
@@ -105,7 +153,7 @@ void ScriptKVDataParser::ParseScriptTagBody(int& offset, ScriptData*& scriptTagB
             ParseScriptTagBody(offset, scriptTagBody->_value, false);
     }
         break;
-    case 2: // String
+    case STRING: // String
     {
 #if PARSER_ENDIAN == PARSER_LITTLEENDIAN
         uint16_t t = *(uint16_t*)(data + offset);
@@ -126,7 +174,7 @@ void ScriptKVDataParser::ParseScriptTagBody(int& offset, ScriptData*& scriptTagB
             ParseScriptTagBody(offset, scriptTagBody->_value, false);
     }
         break;
-    case 3: // Object (dose not have the length)
+    case OBJECT: // Object (dose not have the length)
     {
         std::vector<ScriptData*> objs;
         scriptTagBody = new ScriptData;
@@ -167,16 +215,15 @@ void ScriptKVDataParser::ParseScriptTagBody(int& offset, ScriptData*& scriptTagB
             delete objs[idx];
         }
         scriptTagBody->_data = (void*)dataArray;
+        scriptTagBody->_extra = new int(objs.size());
         ParseScriptTagBody(offset, scriptTagBody->_value, true);
     }
         break;
-    case 4: // MovieClip (reserved, not supported)
+    case MOVIE_CLIP: // MovieClip (reserved, not supported)
+    case NULL_DATA: // Null
+    case UNDEFINED: // Undefined
         break;
-    case 5: // Null
-        break;
-    case 6: // Undefined
-        break;
-    case 7: // Reference
+    case REFERENCE: // Reference
     {
 #if PARSER_ENDIAN == PARSER_LITTLEENDIAN
         uint16_t t = *(uint16_t*)(data + offset);
@@ -193,7 +240,7 @@ void ScriptKVDataParser::ParseScriptTagBody(int& offset, ScriptData*& scriptTagB
             ParseScriptTagBody(offset, scriptTagBody->_value, false);
     }
         break;
-    case 8: // ECMA Array
+    case ECMA_ARRAY: // ECMA Array
     {
 #if PARSER_ENDIAN == PARSER_LITTLEENDIAN
         uint32_t t = *(uint32_t*)(data + offset);
@@ -208,6 +255,7 @@ void ScriptKVDataParser::ParseScriptTagBody(int& offset, ScriptData*& scriptTagB
         ScriptData* dataArray = new ScriptData[ECMAArrayLength];
         scriptTagBody = new ScriptData;
         scriptTagBody->_type = type;
+        scriptTagBody->_extra = new int(ECMAArrayLength);
         scriptTagBody->_data = (void*)dataArray;
         for (uint32_t idx = 0; idx < ECMAArrayLength; idx++)
         {
@@ -235,7 +283,7 @@ void ScriptKVDataParser::ParseScriptTagBody(int& offset, ScriptData*& scriptTagB
         ParseScriptTagBody(offset, scriptTagBody->_value, true);
     }
         break;
-    case 9: // Object end marker
+    case OBJECT_END_MARKER: // Object end marker
     {
         uint8_t end0 = (data + offset)[0]; // 0
         uint8_t end1 = (data + offset)[1]; // 0
@@ -243,7 +291,7 @@ void ScriptKVDataParser::ParseScriptTagBody(int& offset, ScriptData*& scriptTagB
         offset += 3;
     }
         break;
-    case 10: // Strict array
+    case STRICT_ARRAY: // Strict array
     {
 #if PARSER_ENDIAN == PARSER_LITTLEENDIAN
         uint32_t t = *(uint32_t*)(data + offset);
@@ -259,6 +307,7 @@ void ScriptKVDataParser::ParseScriptTagBody(int& offset, ScriptData*& scriptTagB
         ScriptData* dataArray = new ScriptData[StrictArrayLength];
         scriptTagBody = new ScriptData;
         scriptTagBody->_type = type;
+        scriptTagBody->_extra = new int(StrictArrayLength);
         for (uint32_t idx = 0; idx < StrictArrayLength; idx++)
         {
             ScriptData* dataValue;
@@ -269,7 +318,7 @@ void ScriptKVDataParser::ParseScriptTagBody(int& offset, ScriptData*& scriptTagB
         scriptTagBody->_data = (void*)dataArray;
     }
         break;
-    case 11: // Data Date
+    case DATA_DATE: // Data Date
     {
 #if PARSER_ENDIAN == PARSER_LITTLEENDIAN
         uint64_t t = *(uint64_t*)(data + offset);
@@ -305,7 +354,7 @@ void ScriptKVDataParser::ParseScriptTagBody(int& offset, ScriptData*& scriptTagB
             ParseScriptTagBody(offset, scriptTagBody->_value, false);
     }
         break;
-    case 12: // Long String
+    case LONG_STRING: // Long String
     {
 #if PARSER_ENDIAN == PARSER_LITTLEENDIAN
         uint32_t t = *(uint32_t*)(data + offset);

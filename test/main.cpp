@@ -65,6 +65,7 @@ void PrintScriptTag(FLVTag* tag, int size, uint32_t preSize)
 
 int main(int argc, const char* argv[])
 {
+    std::cout << "FLV parser API demo [usage]: main.exe sample.flv" << std::endl;
     int retCode = 0;
     if (argc != 2)
     {

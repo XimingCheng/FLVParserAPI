@@ -2,3 +2,4 @@
 /api/*.swp
 /test/*.swp
 /*.swp
+/build/
