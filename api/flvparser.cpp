@@ -517,9 +517,15 @@ bool FLVParser::ParseFLVTag()
 bool FLVParser::ParseAudioTag(const FLVTag::FLVTagHeader* header)
 {
     int dataSize = 0;
+#if PARSER_ENDIAN == PARSER_LITTLEENDIAN
     dataSize |= (header->_dataSize[2]);
     dataSize |= (header->_dataSize[1] << 8);
     dataSize |= (header->_dataSize[0] << 16);
+#else
+    dataSize |= (header->_dataSize[0]);
+    dataSize |= (header->_dataSize[1] << 8);
+    dataSize |= (header->_dataSize[2] << 16);
+#endif
 
     AudioTag::AudioTagHeader audioHeader;
     if (fread((void*)&audioHeader, sizeof(audioHeader), 1, _flvFile) <= 0)
@@ -557,6 +563,14 @@ bool FLVParser::ParseAudioTag(const FLVTag::FLVTagHeader* header)
         std::cerr << "[failed]: read the iPreviousTagSize failed" << std::endl;
         return false;
     }
+#if PARSER_ENDIAN == PARSER_LITTLEENDIAN
+    uint32_t t = iPreviousTagSize;
+    uint32_t iPreviousTagSizeL = t >> 24;
+    iPreviousTagSizeL |= ((t & 0xFF0000) >> 8);
+    iPreviousTagSizeL |= ((t & 0xFF00) << 8);
+    iPreviousTagSizeL |= ((t & 0xFF) << 24);
+    iPreviousTagSize = iPreviousTagSizeL;
+#endif
     _pA(&tag, dataSize, iPreviousTagSize, AACPacketType);
     return true;
 }
@@ -564,9 +578,15 @@ bool FLVParser::ParseAudioTag(const FLVTag::FLVTagHeader* header)
 bool FLVParser::ParseVideoTag(const FLVTag::FLVTagHeader* header)
 {
     int dataSize = 0;
+#if PARSER_ENDIAN == PARSER_LITTLEENDIAN
     dataSize |= (header->_dataSize[2]);
     dataSize |= (header->_dataSize[1] << 8);
     dataSize |= (header->_dataSize[0] << 16);
+#else
+    dataSize |= (header->_dataSize[0]);
+    dataSize |= (header->_dataSize[1] << 8);
+    dataSize |= (header->_dataSize[2] << 16);
+#endif
 
     VideoTag::VideoTagHeader videoHeader;
     if (fread((void*)&videoHeader, sizeof(videoHeader), 1, _flvFile) <= 0)
@@ -614,6 +634,14 @@ bool FLVParser::ParseVideoTag(const FLVTag::FLVTagHeader* header)
         std::cerr << "[failed]: read the iPreviousTagSize failed" << std::endl;
         return false;
     }
+#if PARSER_ENDIAN == PARSER_LITTLEENDIAN
+    uint32_t t = iPreviousTagSize;
+    uint32_t iPreviousTagSizeL = t >> 24;
+    iPreviousTagSizeL |= ((t & 0xFF0000) >> 8);
+    iPreviousTagSizeL |= ((t & 0xFF00) << 8);
+    iPreviousTagSizeL |= ((t & 0xFF) << 24);
+    iPreviousTagSize = iPreviousTagSizeL;
+#endif
     _pV(&tag, dataSize, iPreviousTagSize, &AVCPacketHeader, vp6Byte);
     return true;
 }
@@ -621,9 +649,15 @@ bool FLVParser::ParseVideoTag(const FLVTag::FLVTagHeader* header)
 bool FLVParser::ParseScriptTag(const FLVTag::FLVTagHeader* header)
 {
     int dataSize = 0;
+#if PARSER_ENDIAN == PARSER_LITTLEENDIAN
     dataSize |= (header->_dataSize[2]);
     dataSize |= (header->_dataSize[1] << 8);
     dataSize |= (header->_dataSize[0] << 16);
+#else
+    dataSize |= (header->_dataSize[0]);
+    dataSize |= (header->_dataSize[1] << 8);
+    dataSize |= (header->_dataSize[2] << 16);
+#endif
     // skip data
     std::shared_ptr<uint8_t> data(new uint8_t[dataSize], std::default_delete<uint8_t[]>());
     if (fread((void*)data.get(), dataSize, 1, _flvFile) <= 0)
@@ -638,6 +672,14 @@ bool FLVParser::ParseScriptTag(const FLVTag::FLVTagHeader* header)
         std::cerr << "[failed]: read the iPreviousTagSize failed" << std::endl;
         return false;
     }
+#if PARSER_ENDIAN == PARSER_LITTLEENDIAN
+    uint32_t t = iPreviousTagSize;
+    uint32_t iPreviousTagSizeL = t >> 24;
+    iPreviousTagSizeL |= ((t & 0xFF0000) >> 8);
+    iPreviousTagSizeL |= ((t & 0xFF00) << 8);
+    iPreviousTagSizeL |= ((t & 0xFF) << 24);
+    iPreviousTagSize = iPreviousTagSizeL;
+#endif
     _pS(&tag, dataSize, iPreviousTagSize);
     return true;
 }
