@@ -58,13 +58,42 @@ void ScriptKVDataParser::FreeData(ScriptData* data, bool bKey)
     switch (data->_type)
     {
     case DOUBLE:
+    {
+        double* p = (double*)data->_data;
+        delete p;
+        if (bKey)
+            FreeData(data->_value, false);
+    }
+        break;
     case BOOLEAN:
+    {
+        bool* p = (bool*)data->_data;
+        delete p;
+        if (bKey)
+            FreeData(data->_value, false);
+    }
+        break;
     case REFERENCE:
+    {
+        uint16_t* p = (uint16_t*)data->_data;
+        delete p;
+        if (bKey)
+            FreeData(data->_value, false);
+    }
+        break;
     case DATA_DATE:
+    {
+        uint64_t* p = (uint64_t*)data->_data;
+        delete p;
+        if (bKey)
+            FreeData(data->_value, false);
+    }
+        break;
     case STRING:
     case LONG_STRING:
     {
-        delete data->_data;
+        char* str = (char*)data->_data;
+        delete [] str;
         if (bKey)
             FreeData(data->_value, false);
     }
