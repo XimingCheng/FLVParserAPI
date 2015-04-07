@@ -108,7 +108,7 @@ void ScriptKVDataParser::FreeData(ScriptData* data, bool bKey)
     case OBJECT:
     {
         int ArrayLength = *(int*)data->_extra;
-        delete data->_extra;
+        delete &ArrayLength;
         ScriptData* dataArray = (ScriptData*)data->_data;
         for (int idx = 0; idx < ArrayLength; idx++)
         {
